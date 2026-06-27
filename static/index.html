@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TranscriptAI · סיכום פגישות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ===== TranscriptAI · Ambient Intelligence design system ===== */
+  :root{
+    --ink:#121C2A; --paper:#F9FAFB; --surface:#FFFFFF; --muted:#4B5563;
+    --line:#E5E7EB; --line-soft:#EFF2F7;
+    --primary:#2563EB; --primary-deep:#004AC6; --primary-soft:#EAF0FF;
+    --accent:#10B981; --accent-deep:#059669; --accent-soft:#E6F7F1;   /* success / green */
+    --ai:#8B5CF6; --ai-soft:#F1ECFE;                                   /* AI / processing purple */
+    --amber:#D97706; --amber-soft:#FEF3E2; --red:#DC2626; --ok:#10B981;
+    --shadow-1:0 1px 2px rgba(31,41,55,.04);
+    --shadow-2:0 4px 12px rgba(31,41,55,.06);
+    --mono:ui-monospace,"SFMono-Regular","Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Heebo","Inter","Segoe UI",system-ui,sans-serif;background:var(--paper);
+       color:var(--ink);height:100vh;overflow:hidden;display:flex;font-size:15px;line-height:1.55;}
+  ::selection{background:var(--primary-soft);}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{width:268px;background:var(--surface);border-left:1px solid var(--line);
+           display:flex;flex-direction:column;padding:22px 18px;flex-shrink:0;}
+  .brand{display:flex;align-items:center;justify-content:space-between;gap:11px;padding:2px 6px 20px;}
+  .brand h1{font-size:21px;font-weight:800;letter-spacing:-.02em;line-height:1;color:var(--ink);}
+  .brand-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+  .brand-badge{width:36px;height:36px;border-radius:10px;background:var(--primary);color:#fff;flex-shrink:0;
+               display:grid;place-items:center;font-size:17px;font-weight:800;box-shadow:0 6px 16px rgba(37,99,235,.32);}
+  .new-meeting-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;background:var(--primary);
+       color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-size:15px;font-weight:700;
+       cursor:pointer;margin-bottom:18px;box-shadow:0 6px 16px rgba(37,99,235,.28);transition:.15s;}
+  .new-meeting-btn:hover{background:var(--primary-deep);}
+  .nav{display:flex;flex-direction:column;gap:3px;}
+  .nav .lbl{font-size:10.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:14px 12px 6px;}
+  .nav button{display:flex;align-items:center;gap:11px;padding:11px 13px;border:none;background:transparent;
+              color:var(--muted);font-size:14.5px;font-family:inherit;border-radius:10px;cursor:pointer;
+              text-align:right;transition:.15s;width:100%;font-weight:500;}
+  .nav button:hover{background:var(--line-soft);color:var(--ink);}
+  .nav button.active{background:var(--primary-soft);color:var(--primary-deep);font-weight:700;}
+  .nav button.active .ico{color:var(--primary);}
+  .nav .ico{font-size:16px;width:20px;text-align:center;color:var(--muted);order:2;margin-inline-start:auto;}
+  .sidebar .foot{margin-top:auto;font-size:11px;color:var(--muted);padding:14px 10px 0;border-top:1px solid var(--line-soft);}
+  .proc-pill{margin-top:auto;margin-bottom:10px;display:flex;align-items:center;gap:9px;padding:11px 13px;
+             border:1px solid var(--ai);border-radius:11px;cursor:pointer;background:var(--ai-soft);
+             color:var(--ai);font-family:inherit;font-size:13px;font-weight:600;}
+  .proc-pill:hover{filter:brightness(.97);}
+
+  /* ---------- Content ---------- */
+  .content{flex:1;overflow-y:auto;padding:34px 42px 60px;}
+  .view{display:none;}
+  .view.active{display:block;animation:fade .22s ease-out;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  .h1{font-size:30px;font-weight:800;letter-spacing:-.02em;}
+  .sub{font-size:14px;color:var(--muted);margin-top:4px;}
+  .page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:24px;}
+
+  /* ---------- Buttons ---------- */
+  .btn{border:1px solid transparent;border-radius:8px;padding:9px 16px;font-size:14px;font-family:inherit;
+       cursor:pointer;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 2px 6px rgba(37,99,235,.22);}
+  .btn-primary:hover{background:var(--primary-deep);}
+  .btn-ghost{background:var(--surface);color:var(--ink);border-color:var(--line);}
+  .btn-ghost:hover{border-color:#cfd4dc;background:var(--line-soft);}
+  .btn-accent{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(16,185,129,.22);}
+  .btn-accent:hover{background:var(--accent-deep);color:#fff;}
+  .btn-danger{background:var(--surface);color:var(--red);border-color:var(--line);}
+  .btn-danger:hover{background:var(--red);color:#fff;border-color:var(--red);}
+  .icon-btn{background:var(--surface);border:1px solid var(--line);color:var(--muted);border-radius:8px;
+            padding:8px 11px;cursor:pointer;font-size:14px;transition:.15s;}
+  .icon-btn:hover{color:var(--red);border-color:var(--red);background:#FEF2F2;}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:none;box-shadow:0 0 0 3px var(--primary-soft),0 0 0 1px var(--primary);}
+
+  /* ---------- Cards ---------- */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:16px;
+        box-shadow:var(--shadow-1);}
+  .card h2{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:14px;}
+
+  /* ---------- Dashboard ---------- */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-1);}
+  .stat .num{font-size:32px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
+  .stat .lbl{font-size:13px;color:var(--muted);margin-top:4px;}
+  .toolbar{display:flex;gap:12px;margin-bottom:18px;align-items:center;flex-wrap:wrap;}
+  .search{flex:1;min-width:220px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+          padding:11px 16px;font-family:inherit;font-size:14.5px;color:var(--ink);transition:.15s;}
+  .search::placeholder{color:var(--muted);}
+  .search:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .chip{background:var(--surface);border:1px solid var(--line);color:var(--muted);border-radius:20px;
+        padding:6px 14px;font-size:13px;cursor:pointer;transition:.15s;}
+  .chip:hover{border-color:var(--muted);}
+  .chip.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-deep);font-weight:600;}
+
+  .list{display:flex;flex-direction:column;gap:12px;}
+  .mrow{display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--surface);
+        border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-1);cursor:pointer;transition:.15s;}
+  .mrow:hover{border-color:#D1D5DB;box-shadow:var(--shadow-2);}
+  .mrow .when{font-family:var(--mono);font-size:13px;color:var(--muted);width:92px;flex-shrink:0;line-height:1.4;}
+  .mrow .main{flex:1;min-width:0;}
+  .mrow .ttl{font-size:16px;font-weight:700;color:var(--ink);}
+  .mrow .meta{font-size:12.5px;color:var(--muted);margin-top:3px;}
+  .pill{font-size:12px;font-weight:600;padding:4px 11px;border-radius:20px;white-space:nowrap;}
+  .pill.tasks{background:var(--accent-soft);color:var(--accent-deep);}
+  .pill.amber{background:var(--amber-soft);color:var(--amber);}
+  .tag{font-size:11.5px;background:var(--line-soft);color:var(--muted);padding:3px 10px;border-radius:20px;}
+  .tag.proj{background:var(--primary-soft);color:var(--primary-deep);}
+
+  /* ---------- Recordings ---------- */
+  .rec-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);
+           border-radius:12px;padding:14px 18px;margin-bottom:10px;}
+  .rec-row .rec-info{flex:1;min-width:0;}
+  .rec-row .rec-name{font-size:14px;font-weight:600;}
+  .rec-row .rec-meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+  /* ---------- Empty ---------- */
+  .empty{color:var(--muted);text-align:center;padding:70px 20px;font-size:15px;line-height:1.9;}
+  .empty .big{font-size:40px;display:block;margin-bottom:12px;opacity:.5;}
+
+  /* ---------- Meeting detail (tabs) ---------- */
+  .detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:8px;}
+  .sum-title{font-size:26px;font-weight:800;letter-spacing:-.02em;}
+  .sum-date{font-size:13px;color:var(--muted);margin-top:4px;}
+  .player{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:13px 18px;
+          display:flex;align-items:center;gap:14px;margin:16px 0;box-shadow:var(--shadow-1);}
+  .player .play{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;border:none;
+                cursor:pointer;font-size:14px;display:grid;place-items:center;flex-shrink:0;box-shadow:0 4px 12px rgba(37,99,235,.3);}
+  .player .track{flex:1;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .player .track .fill{height:100%;width:18%;background:var(--primary);}
+  .player .tt{font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;}
+  .tab{background:none;border:none;font-family:inherit;font-size:15px;color:var(--muted);cursor:pointer;
+       padding:11px 16px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s;}
+  .tab:hover{color:var(--ink);}
+  .tab.active{color:var(--primary-deep);border-bottom-color:var(--primary);}
+  .tab .cnt{font-family:var(--mono);font-size:12px;color:var(--muted);margin-right:5px;}
+  .tabpane{display:none;animation:fade .2s;}
+  .tabpane.active{display:block;}
+
+  .tldr{font-size:16px;line-height:1.7;color:var(--ink);}
+  .block{margin-top:22px;}
+  .block h3{font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:11px;}
+  .block ul{list-style:none;display:flex;flex-direction:column;gap:9px;}
+  .block li{font-size:15px;line-height:1.55;padding-right:18px;position:relative;}
+  .block li::before{content:"";position:absolute;right:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--primary);}
+  .topic{margin-bottom:16px;padding-right:14px;border-right:3px solid var(--primary-soft);}
+  .topic-ttl{font-size:15.5px;font-weight:700;margin-bottom:8px;color:var(--ink);}
+  .topic ul{list-style:none;display:flex;flex-direction:column;gap:7px;}
+  .task{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;background:var(--surface);border:1px solid var(--line);
+        border-radius:12px;margin-bottom:9px;box-shadow:var(--shadow-1);}
+  .task input{margin-top:3px;accent-color:var(--accent);width:17px;height:17px;}
+  .task .tk{font-size:14.5px;}
+  .task .meta{font-size:12px;color:var(--muted);margin-top:3px;}
+  .task .meta b{color:var(--primary-deep);font-weight:600;}
+  .transcript{font-size:15px;line-height:1.95;color:#374151;white-space:pre-wrap;}
+  .transcript.live{max-height:360px;overflow-y:auto;}
+  .seg{opacity:0;animation:fadeIn .3s forwards;}
+  .seg .t{color:var(--muted);font-size:11px;margin-left:6px;font-family:var(--mono);}
+  @keyframes fadeIn{to{opacity:1;}}
+
+  /* ---------- Recording ---------- */
+  .record-box{display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 0 10px;}
+  .opt-row{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;font-size:13.5px;color:var(--muted);}
+  .opt-row label{font-size:13.5px;color:var(--muted);}
+  #recordBtn{width:118px;height:118px;border-radius:50%;border:none;cursor:pointer;font-size:16px;font-weight:700;
+       color:#fff;background:var(--red);box-shadow:0 8px 28px rgba(220,38,38,.3);transition:.2s;margin-top:6px;}
+  #recordBtn:hover{transform:scale(1.04);}
+  #recordBtn.recording{animation:pulse 1.5s infinite;background:#B91C1C;}
+  #recordBtn:disabled{background:var(--muted);cursor:not-allowed;box-shadow:none;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}50%{box-shadow:0 0 0 16px rgba(220,38,38,0)}}
+  #timer{font-size:32px;font-weight:800;font-family:var(--mono);}
+  #recStatus{font-size:13.5px;color:var(--muted);min-height:20px;}
+  #pauseBtn{padding:9px 18px;border:1px solid var(--line);border-radius:10px;background:var(--surface);
+       color:var(--ink);font-family:inherit;font-size:14px;cursor:pointer;}
+  #pauseBtn:hover{border-color:var(--muted);}
+
+  /* ---------- Processing ---------- */
+  .spinner{width:15px;height:15px;border:2.5px solid var(--line);border-top-color:var(--ai);
+       border-radius:50%;display:inline-block;animation:spin .8s linear infinite;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .progress-wrap{margin-bottom:18px;}
+  .progress-label{font-size:13px;color:var(--muted);margin-bottom:8px;}
+  .progress-bar{height:6px;background:var(--line-soft);border-radius:5px;overflow:hidden;}
+  .progress-fill{height:100%;width:0%;border-radius:5px;background:var(--ai);transition:width .35s ease-out;}
+  .progress-fill.indeterminate{width:38%;animation:indet 1.2s ease-in-out infinite;}
+  @keyframes indet{0%{margin-right:-38%}100%{margin-right:100%}}
+  .proc-clock{font-family:var(--mono);font-size:13px;color:var(--muted);}
+  .stall-warn{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--amber-soft);
+       border:1px solid var(--amber);color:#8a5a12;border-radius:12px;padding:13px 18px;margin-bottom:18px;font-size:14px;}
+
+  /* ---------- Chat (meeting Q&A) ---------- */
+  .chat{display:flex;flex-direction:column;height:440px;border:1px solid var(--line);border-radius:14px;
+        background:var(--surface);overflow:hidden;box-shadow:var(--shadow-1);}
+  .chat-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;}
+  .chat-hint{color:var(--muted);font-size:13.5px;text-align:center;margin:auto;max-width:360px;line-height:1.8;}
+  .cmsg{max-width:80%;padding:10px 14px;border-radius:14px;font-size:14.5px;line-height:1.65;white-space:pre-wrap;}
+  .cmsg.user{align-self:flex-start;background:var(--primary);color:#fff;border-bottom-right-radius:4px;}
+  .cmsg.bot{align-self:flex-end;background:var(--paper);border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:4px;}
+  .cmsg.bot.typing{color:var(--muted);font-style:italic;}
+  .chat-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:var(--paper);}
+  .chat-input input,.chat-input textarea{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+       padding:11px 14px;font-family:inherit;font-size:14.5px;color:var(--ink);resize:none;max-height:120px;line-height:1.5;}
+
+  /* ---------- Task folders (My Tasks by project) ---------- */
+  .tfolder{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;
+           box-shadow:var(--shadow-1);overflow:hidden;}
+  .tfolder-head{display:flex;align-items:center;gap:11px;padding:14px 18px;cursor:pointer;transition:.12s;}
+  .tfolder-head:hover{background:var(--line-soft);}
+  .tf-name{font-weight:700;font-size:15.5px;flex:1;}
+  .tf-caret{color:var(--muted);font-size:12px;transition:.15s;}
+  .tfolder.collapsed .tf-caret{transform:rotate(-90deg);}
+  .tfolder.collapsed .tfolder-body{display:none;}
+  .tfolder-body{padding:4px 16px 12px;}
+
+  /* ---------- Calendar (bot agenda) ---------- */
+  .cal-day-h{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.04em;
+             margin:18px 4px 10px;text-transform:none;}
+  .cal-day-h:first-child{margin-top:0;}
+  .cal-time{display:flex;flex-direction:column;width:72px;flex-shrink:0;font-family:var(--mono);line-height:1.3;}
+  .cal-time b{font-size:15px;color:var(--ink);}
+  .cal-time span{font-size:12px;color:var(--muted);}
+  .plat{display:inline-block;margin-top:5px;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:20px;}
+  .plat-meet{background:#E6F7F1;color:#059669;}
+  .plat-zoom{background:#EAF0FF;color:#2563EB;}
+  .plat-teams{background:#F1ECFE;color:#6D28D9;}
+
+  /* ---------- Project logo ---------- */
+  .proj-logo{width:46px;height:46px;border-radius:10px;object-fit:contain;background:var(--paper);
+             border:1px solid var(--line);flex-shrink:0;}
+  .proj-logo.placeholder{display:grid;place-items:center;font-weight:800;color:var(--primary);font-size:18px;}
+  .fmt-prog{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+       margin-bottom:16px;box-shadow:var(--shadow-1);}
+  .fmt-prog .progress-label{display:flex;align-items:center;gap:8px;}
+
+  /* ---------- Forms / selects ---------- */
+  select{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;
+       padding:9px 13px;font-family:inherit;font-size:14px;cursor:pointer;}
+  .filter{min-width:170px;}
+  .fld{margin-bottom:15px;}
+  .fld label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+  .fld input,.fld textarea{width:100%;background:var(--surface);color:var(--ink);border:1px solid var(--line);
+       border-radius:10px;padding:10px 13px;font-family:inherit;font-size:14.5px;}
+  .fld textarea{resize:vertical;min-height:56px;line-height:1.5;}
+  .fld-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:start;}
+  .row-del{background:var(--surface);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:9px 11px;cursor:pointer;}
+  .row-del:hover{color:var(--red);border-color:var(--red);}
+  .find-box{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:15px 17px;margin-bottom:10px;}
+  .find-box .sub2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+  .find-box input,.find-box textarea{width:100%;background:var(--surface);color:var(--ink);border:1px solid var(--line);
+       border-radius:9px;padding:9px 12px;font-family:inherit;font-size:14px;}
+  .add-btn{background:var(--surface);border:1px dashed var(--primary);color:var(--primary-deep);border-radius:10px;
+       padding:10px 15px;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;}
+  .add-btn:hover{background:var(--primary-soft);}
+  .proj-card{display:flex;align-items:center;justify-content:space-between;gap:14px;}
+  .proj-card .pc-name{font-size:18px;font-weight:700;}
+  .proj-card .pc-meta{font-size:13px;color:var(--muted);margin-top:3px;}
+  .move-select{font-size:12px;padding:7px 9px;}
+
+  /* ---------- Modals + toast ---------- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(18,28,42,.45);backdrop-filter:blur(2px);z-index:200;
+       display:flex;align-items:center;justify-content:center;}
+  .modal{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px 28px;width:400px;
+       max-width:90vw;box-shadow:0 12px 32px rgba(31,41,55,.18);}
+  .modal h3{font-size:18px;font-weight:700;margin-bottom:8px;}
+  .modal p{font-size:13.5px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+  .modal input{width:100%;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:10px;
+       padding:12px 14px;font-family:inherit;font-size:14.5px;margin-bottom:18px;}
+  .modal-actions{display:flex;gap:10px;}
+  #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);background:#1F2937;
+       color:#fff;padding:13px 22px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;
+       box-shadow:0 12px 32px rgba(31,41,55,.25);z-index:300;}
+  #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+  .back-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;font-family:inherit;
+       margin-bottom:16px;display:flex;align-items:center;gap:6px;}
+  .back-btn:hover{color:var(--primary);}
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:5px;}
+  ::-webkit-scrollbar-thumb:hover{background:#9CA3AF;}
+</style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div><h1>TranscriptAI</h1><div class="brand-sub">סביבת עבודה</div></div>
+      <div class="brand-badge">✦</div>
+    </div>
+    <button class="new-meeting-btn" onclick="nav('record')"><span>＋</span> פגישה חדשה</button>
+    <nav class="nav">
+      <div class="lbl">ניווט</div>
+      <button data-view="summaries" onclick="nav('summaries')"><span class="ico">▶</span> סיכומי פגישות</button>
+      <button data-view="calendar" onclick="nav('calendar')"><span class="ico">📅</span> יומן הבוט</button>
+      <button data-view="mytasks" onclick="nav('mytasks')"><span class="ico">✓</span> המשימות שלי</button>
+      <button data-view="recordings" onclick="nav('recordings')"><span class="ico">♪</span> הקלטות</button>
+      <button data-view="projects" onclick="nav('projects')"><span class="ico">▦</span> לקוחות ופרויקטים</button>
+      <button data-view="format" onclick="nav('format')"><span class="ico">▤</span> סיכום מעוצב</button>
+      <button data-view="settings" onclick="nav('settings')"><span class="ico">⚙</span> הגדרות</button>
+    </nav>
+    <button id="activeProcBtn" class="proc-pill" style="display:none" onclick="nav('processing')">
+      <span class="spinner"></span> עיבוד פעיל — חזרה
+    </button>
+    <div class="foot">TranscriptAI · v1.0 · מקומי</div>
+  </aside>
+
+  <!-- Content -->
+  <main class="content">
+    <!-- Dashboard / כל הפגישות -->
+    <section class="view" id="view-summaries">
+      <div class="page-head">
+        <div><div class="h1">סיכומי פגישות</div><div class="sub">סיכומים, תובנות ומשימות - במקום אחד</div></div>
+        <button class="btn btn-primary" onclick="nav('record')">+ פגישה חדשה</button>
+      </div>
+      <div class="stats" id="dashStats"></div>
+      <div class="toolbar">
+        <input id="sumSearch" class="search" placeholder="חיפוש בכל הפגישות…" oninput="renderSummaries()">
+        <select id="sumFilter" class="filter" onchange="renderSummaries()"></select>
+      </div>
+      <div id="summaries-list"></div>
+    </section>
+
+    <!-- יומן הבוט -->
+    <section class="view" id="view-calendar">
+      <div class="page-head">
+        <div><div class="h1">יומן הבוט</div>
+          <div class="sub" id="calSub">הפגישות הקרובות מהיומן שמחובר לבוט</div></div>
+        <button class="btn btn-ghost" onclick="loadCalendar()">↻ רענן</button>
+      </div>
+      <div id="calendar-list"></div>
+    </section>
+
+    <!-- המשימות שלי -->
+    <section class="view" id="view-mytasks">
+      <div class="page-head"><div><div class="h1">המשימות שלי</div>
+        <div class="sub">משימות שאספת מהסיכומים — מרוכזות במקום אחד</div></div></div>
+      <div id="mytasks-list"></div>
+    </section>
+
+
+    <!-- הקלטות -->
+    <section class="view" id="view-recordings">
+      <div class="page-head"><div><div class="h1">הקלטות</div>
+        <div class="sub">קבצי האודיו שנשמרו — נגן או תמלל מחדש</div></div></div>
+      <div class="toolbar"><select id="recFilter" class="filter" onchange="renderRecordings()"></select></div>
+      <div id="recordings-list"></div>
+    </section>
+
+    <!-- לקוחות ופרויקטים -->
+    <section class="view" id="view-projects">
+      <div class="page-head"><div><div class="h1">לקוחות ופרויקטים</div>
+        <div class="sub">ארגון פגישות לפי לקוח. לכל פרויקט תיקיה ייעודית</div></div></div>
+      <div class="toolbar">
+        <input id="projNewName" class="search" placeholder="שם פרויקט חדש…" onkeydown="if(event.key==='Enter')createProjectFromView()">
+        <button class="btn btn-primary" onclick="createProjectFromView()">+ צור פרויקט</button>
+      </div>
+      <div id="projects-list"></div>
+    </section>
+
+    <!-- סיכום מעוצב -->
+    <section class="view" id="view-format">
+      <div class="page-head">
+        <div><div class="h1">סיכום מעוצב</div>
+          <div class="sub">מלא את הפרטים והורד PDF בפורמט DIT — ידנית או מתוך סיכום קיים</div></div>
+        <button class="btn btn-accent" onclick="exportFormatPdf()">↓ הורד PDF</button>
+      </div>
+      <div id="formatProgressWrap"></div>
+      <div class="card">
+        <div class="fld"><label>שם הפרויקט</label><input id="fProject"></div>
+        <div class="fld"><label>נושא הפגישה</label><input id="fTopic"></div>
+        <div class="fld-row" style="grid-template-columns:1fr 1fr">
+          <div class="fld" style="margin:0"><label>תאריך</label><input id="fDate" placeholder="DD/MM/YYYY"></div>
+          <div class="fld" style="margin:0"><label>מקום</label><input id="fLocation"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>לוגו לקוח</h2>
+        <div class="opt-row" style="justify-content:flex-start;flex-wrap:wrap">
+          <label>פרויקט:</label>
+          <select id="fLogoProject" onchange="refreshLogoStatus()"></select>
+          <button class="btn btn-ghost" onclick="uploadClientLogo()">↑ העלה לוגו</button>
+          <button class="btn btn-danger" onclick="removeClientLogo()">הסר</button>
+          <span id="logoStatus" class="sub" style="margin:0"></span>
+        </div>
+        <div class="sub" style="margin-top:8px">הלוגו נשמר בתיקיית הפרויקט ומופיע בפינת ה-PDF במקום "לוגו הלקוח".</div>
+      </div>
+      <div class="card">
+        <h2>משתתפים</h2>
+        <div id="participantsList"></div>
+        <button class="add-btn" onclick="addParticipant()">+ הוסף משתתף</button>
+      </div>
+      <div class="card">
+        <h2>ממצאים ונקודות</h2>
+        <div id="findingsList"></div>
+        <button class="add-btn" onclick="addFinding()">+ הוסף ממצא</button>
+      </div>
+    </section>
+
+    <!-- הגדרות -->
+    <section class="view" id="view-settings">
+      <div class="page-head"><div><div class="h1">הגדרות</div>
+        <div class="sub">הצטרפות אוטומטית לפגישות מהיומן - הזמן כתובת זו לפגישה והמערכת תצטרף ותקליט</div></div></div>
+      <div class="card">
+        <h2>בוט יומן - הצטרפות אוטומטית</h2>
+        <label style="cursor:pointer;display:flex;align-items:center;gap:8px;margin-bottom:16px;font-weight:600">
+          <input type="checkbox" id="calEnabled"> הפעל הצטרפות אוטומטית לפגישות מהיומן</label>
+        <div class="fld"><label>כתובת Gmail של המערכת (תזמין אותה לפגישות)</label><input id="calEmail" placeholder="bot@gmail.com"></div>
+        <div class="fld"><label>App Password (סיסמת אפליקציה של Gmail - לא סיסמת החשבון)</label><input id="calPass" type="password" placeholder="16 תווים"></div>
+        <div class="fld-row" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="fld" style="margin:0"><label>שרת IMAP</label><input id="calImap" placeholder="imap.gmail.com"></div>
+          <div class="fld" style="margin:0"><label>פרויקט לשיוך</label><select id="calProject"></select></div>
+          <div class="fld" style="margin:0"><label>הצטרף (שניות לפני)</label><input id="calLead" type="number" placeholder="60"></div>
+        </div>
+        <label style="cursor:pointer;display:flex;align-items:center;gap:8px;margin:6px 0 8px;font-weight:600">
+          <input type="checkbox" id="calDocker"> 🐳 בוט Docker — מצטרף כמשתתף לכל הפלטפורמות (כולל Teams), מקליט מקומית. מומלץ.</label>
+        <label style="cursor:pointer;display:flex;align-items:center;gap:8px;margin:0 0 12px">
+          <input type="checkbox" id="calBot"> בוט דפדפן מקומי (גיבוי ל-Meet/Zoom אם Docker כבוי).</label>
+        <div class="fld"><label>שם הבוט שיוצג בפגישה</label><input id="calBotName" placeholder="Synthia Notetaker"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <button class="btn btn-primary" onclick="saveCalendar()">שמור הגדרות</button>
+          <button class="btn btn-ghost" onclick="testCalendar()">🔌 בדוק חיבור והצג פגישות קרובות</button>
+        </div>
+        <div id="calResult" class="sub" style="margin-top:14px"></div>
+      </div>
+      <div class="card">
+        <h2>איך מגדירים</h2>
+        <div class="sub" style="line-height:2">
+          1. צור/השתמש בחשבון Gmail ייעודי למערכת.<br>
+          2. הפעל אימות דו-שלבי, ואז צור <b>App Password</b> (myaccount.google.com → Security → App passwords) והדבק אותו למעלה.<br>
+          3. ודא ש-IMAP מופעל ב-Gmail (Settings → Forwarding and POP/IMAP).<br>
+          4. הזמן את כתובת המייל הזו כמשתתף בכל פגישה ביומן - והמערכת תצטרף ותקליט אוטומטית.<br>
+          <b>חשוב:</b> כדי שההצטרפות האוטומטית תעבוד, יישום הרקע (הפעל_ברקע) חייב לרוץ והמחשב דלוק ומחובר.
+        </div>
+      </div>
+    </section>
+
+    <!-- פגישה חדשה -->
+    <section class="view" id="view-record">
+      <div class="page-head"><div><div class="h1">פגישה חדשה</div>
+        <div class="sub">הקלט פגישה ישירות — קול המערכת נקלט תמיד</div></div></div>
+      <div class="card">
+        <div class="record-box">
+          <div class="opt-row">
+            <label>לקוח / פרויקט:</label>
+            <select id="projSelect"></select>
+            <button class="btn btn-ghost" onclick="newProject()">+ חדש</button>
+            <input id="newProjInput" class="search" style="display:none;min-width:140px;max-width:180px" placeholder="שם הפרויקט" onkeydown="if(event.key==='Enter')createProject()">
+            <button class="btn btn-primary" id="newProjOk" style="display:none" onclick="createProject()">צור</button>
+          </div>
+          <div class="opt-row">
+            <label>מיקרופון:</label>
+            <select id="micSelect"></select>
+            <label style="cursor:pointer;display:flex;align-items:center;gap:6px"><input type="checkbox" id="muteMic"> השתק מיקרופון (רק דוברים אחרים)</label>
+          </div>
+          <div class="opt-row">
+            <label style="cursor:pointer;display:flex;align-items:center;gap:6px"><input type="checkbox" id="capVideo"> כלול וידאו (הקלטת מסך) — נשמר כ-MP4</label>
+          </div>
+          <button id="recordBtn" onclick="toggleRecord()">הקלט</button>
+          <div id="timer">00:00</div>
+          <button id="pauseBtn" onclick="togglePause()" style="display:none">⏸ השהה</button>
+          <div id="recStatus">מוכן להקלטה</div>
+          <div class="opt-row" style="margin-top:6px">
+            <span style="opacity:.7">או —</span>
+            <button class="btn btn-ghost" onclick="uploadMedia()">↑ העלה קובץ (זום / וידאו / אודיו)</button>
+          </div>
+        </div>
+      </div>
+      <div id="record-output"></div>
+    </section>
+
+    <!-- עיבוד -->
+    <section class="view" id="view-processing">
+      <div class="page-head">
+        <div><div class="h1">מעבד את הפגישה</div>
+          <div class="sub" id="proc-status"><span class="spinner"></span> מתמללים…</div></div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span class="proc-clock">⏱ <span id="procElapsed">00:00</span></span>
+          <button class="btn btn-danger" id="cancelBtn" onclick="cancelProc()" style="display:none">✕ בטל עיבוד</button>
+        </div>
+      </div>
+      <div id="stallWarn" class="stall-warn" style="display:none">
+        <span style="flex:1">⚠ אין התקדמות כבר זמן מה — ייתכן שהחיבור ל-Gemini נתקע. התמלול כבר נשמר.</span>
+        <button class="btn btn-ghost" onclick="cancelProc()">בטל</button>
+      </div>
+      <div id="processing-output"></div>
+    </section>
+
+    <!-- פירוט פגישה -->
+    <section class="view" id="view-detail">
+      <button class="back-btn" onclick="nav('summaries')">→ חזרה לכל הפגישות</button>
+      <div id="detail-output"></div>
+    </section>
+  </main>
+
+  <!-- Modals -->
+  <div id="nameModal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <h3>שם הפגישה</h3>
+      <p>תן שם לפגישה. אם תשאיר ריק — ניתן שם אוטומטי לפי תוכן הפגישה.</p>
+      <input id="meetingNameInput" placeholder="לדוגמה: פגישת לקוח — אגף מערבי" onkeydown="if(event.key==='Enter')confirmName(false)">
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="confirmName(false)">שמור והמשך</button>
+        <button class="btn btn-ghost" onclick="confirmName(true)">דלג (שם אוטומטי)</button>
+      </div>
+    </div>
+  </div>
+  <div id="confirmModal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <h3 id="confirmText">בטוח?</h3>
+      <div class="modal-actions">
+        <button class="btn btn-danger" onclick="closeConfirm(true)">כן, מחק</button>
+        <button class="btn btn-ghost" onclick="closeConfirm(false)">ביטול</button>
+      </div>
+    </div>
+  </div>
+  <div id="promptModal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <h3 id="promptTitle">שינוי שם</h3>
+      <input id="promptInput" onkeydown="if(event.key==='Enter')closePrompt(true)">
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closePrompt(true)">שמור</button>
+        <button class="btn btn-ghost" onclick="closePrompt(false)">ביטול</button>
+      </div>
+    </div>
+  </div>
+  <div id="profileModal" class="modal-overlay" style="display:none">
+    <div class="modal" style="width:460px">
+      <h3>פרופיל פרויקט <span id="profProjName" style="color:var(--primary)"></span></h3>
+      <p>פרטי הלקוח/פרויקט. הלוגו יתווסף אוטומטית לסיכום המעוצב של פגישות בפרויקט זה.</p>
+      <div class="fld"><label>שם הלקוח</label><input id="profClient"></div>
+      <div class="fld-row" style="grid-template-columns:1fr 1fr">
+        <div class="fld" style="margin:0"><label>איש קשר</label><input id="profContact"></div>
+        <div class="fld" style="margin:0"><label>טלפון</label><input id="profPhone"></div>
+      </div>
+      <div class="fld-row" style="grid-template-columns:1fr 1fr">
+        <div class="fld" style="margin:0"><label>אימייל</label><input id="profEmail"></div>
+        <div class="fld" style="margin:0"><label>כתובת</label><input id="profAddress"></div>
+      </div>
+      <div class="fld"><label>הערות</label><textarea id="profNotes"></textarea></div>
+      <div class="fld"><label>אחזור לוגו אוטומטי מהאינטרנט (לפי דומיין)</label>
+        <div class="opt-row" style="justify-content:flex-start">
+          <input id="profDomain" placeholder="לדוגמה: apple.com" style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-family:inherit;font-size:14px;color:var(--ink)">
+          <button class="btn btn-ghost" onclick="fetchProfileLogo()">🌐 אחזר לוגו</button>
+        </div>
+      </div>
+      <div class="opt-row" style="justify-content:flex-start;margin-bottom:16px">
+        <button class="btn btn-ghost" onclick="uploadProfileLogo()">↑ העלה לוגו ידנית</button>
+        <button class="btn btn-danger" onclick="removeProfileLogo()">הסר לוגו</button>
+        <span id="profLogoStatus" class="sub" style="margin:0"></span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="saveProfile()">שמור פרופיל</button>
+        <button class="btn btn-ghost" onclick="$('#profileModal').style.display='none'">סגור</button>
+      </div>
+    </div>
+  </div>
+  <div id="previewModal" class="modal-overlay" style="display:none">
+    <div class="modal" style="width:min(820px,94vw);max-height:94vh;display:flex;flex-direction:column;padding:18px">
+      <h3 style="margin-bottom:12px">תצוגה מקדימה - סיכום מעוצב</h3>
+      <iframe id="previewFrame" style="flex:1;width:100%;height:70vh;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe>
+      <div class="modal-actions" style="margin-top:14px">
+        <button class="btn btn-accent" onclick="confirmDownloadPdf()">↓ הורד PDF</button>
+        <button class="btn btn-ghost" onclick="$('#previewModal').style.display='none'">סגור</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast"></div>
+
+<script>
+  const $ = s => document.querySelector(s);
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // המרת מקפים ארוכים למקף קצר אחיד (להצגה בלבד)
+  function nd(s){ return (s||'').replace(/[—–―‒−]/g,'-'); }
+  // escape + נורמליזציית מקפים לטקסט מוצג (לא לערכי id/פרויקט בתוך onclick!)
+  function et(s){ return esc(nd(s)); }
+  function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+                       setTimeout(()=>t.classList.remove('show'), 3000); }
+
+  let currentView='summaries', isProcessing=false;
+  function setProcessing(on){
+    isProcessing=on;
+    $('#activeProcBtn').style.display = on?'flex':'none';
+    $('#cancelBtn').style.display = on?'inline-flex':'none';
+  }
+  async function cancelProc(){
+    await window.pywebview.api.cancel_processing();
+    $('#proc-status').innerHTML = '⏹ מבטל…';
+    $('#cancelBtn').style.display='none';
+    const w=$('#stallWarn'); if(w) w.style.display='none';
+  }
+  function afterProcessing(res){
+    setProcessing(false);
+    stopProcTimer();
+    if (currentView!=='processing'){
+      if (res && res.ok) toast('✓ הסיכום מוכן — כל הפגישות');
+      else if (res && res.canceled) toast('⏹ העיבוד בוטל');
+      else toast('⚠ העיבוד נכשל — התמלול נשמר ב"תמלולים"');
+    }
+  }
+
+  // ---------- Processing clock + stall watchdog (req 1+2) ----------
+  let procTimer=null, watchdog=null, procStart=0, lastProgressTs=0;
+  function markProgress(){ lastProgressTs=Date.now(); const w=$('#stallWarn'); if(w) w.style.display='none'; }
+  function startProcTimer(){
+    procStart=Date.now(); lastProgressTs=Date.now();
+    stopProcTimer();
+    const w=$('#stallWarn'); if(w) w.style.display='none';
+    procTimer=setInterval(()=>{ const el=$('#procElapsed'); if(el) el.textContent=fmt((Date.now()-procStart)/1000); },1000);
+    // אם לא הגיעה התקדמות כלשהי במשך 90 שניות - מציגים אזהרת "נתקע"
+    watchdog=setInterval(()=>{
+      const idle=(Date.now()-lastProgressTs)/1000;
+      const w=$('#stallWarn'); if(w) w.style.display = (idle>90 && isProcessing) ? 'flex':'none';
+    },2000);
+  }
+  function stopProcTimer(){ clearInterval(procTimer); clearInterval(watchdog); procTimer=watchdog=null; }
+
+  // ---------- Navigation ----------
+  function nav(view){
+    currentView = view;
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.querySelectorAll('.nav button[data-view]').forEach(b=>b.classList.remove('active'));
+    $('#view-'+view).classList.add('active');
+    const btn = document.querySelector(`.nav button[data-view="${view}"]`);
+    if (btn) btn.classList.add('active');
+    if (view==='summaries') loadSummaries();
+    if (view==='calendar') loadCalendar();
+    if (view==='mytasks') loadMyTasks();
+    if (view==='recordings') loadRecordings();
+    if (view==='record'){ loadProjects(); loadMics(); }
+    if (view==='projects') loadProjectsView();
+    if (view==='format') renderFormatForm();
+    if (view==='settings') loadSettings();
+  }
+
+  // ---------- Tabs ----------
+  function switchTab(btn, idx){
+    const wrap = btn.closest('.tabs-wrap');
+    wrap.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', i===idx));
+    wrap.querySelectorAll('.tabpane').forEach((p,i)=>p.classList.toggle('active', i===idx));
+  }
+
+  // ---------- Projects view ----------
+  async function loadProjectsView(){
+    const list = $('#projects-list');
+    list.innerHTML = '<div class="empty">טוען…</div>';
+    const stats = await window.pywebview.api.project_stats();
+    list.innerHTML = stats.map(p => `
+      <div class="card proj-card" style="cursor:pointer" onclick="openProject('${esc(p.name)}')">
+        <div style="display:flex;align-items:center;gap:14px;min-width:0">
+          ${p.logo ? `<img src="${p.logo}" class="proj-logo">` : `<div class="proj-logo placeholder">${esc((p.name||'?').trim().charAt(0))}</div>`}
+          <div style="min-width:0">
+            <div class="pc-name">${esc(p.name)}${p.is_default?' <span class="tag">ברירת מחדל</span>':''}</div>
+            <div class="pc-meta">${p.n_meetings} סיכומים · ${p.n_recordings} הקלטות</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost" onclick="openProfile('${esc(p.name)}')">⚙ פרופיל</button>
+          ${p.is_default?'':`<button class="btn btn-ghost" onclick="renameProject('${esc(p.name)}')">✎ שם</button>`}
+          <button class="btn btn-ghost" onclick="openProject('${esc(p.name)}')">צפה בפגישות ←</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // ---------- Project profile (req 5) ----------
+  let _profileProject=null;
+  async function openProfile(name){
+    _profileProject=name;
+    $('#profProjName').textContent=name;
+    const p=await window.pywebview.api.get_project_profile(name);
+    $('#profClient').value=p.client_name||''; $('#profContact').value=p.contact||'';
+    $('#profPhone').value=p.phone||''; $('#profEmail').value=p.email||'';
+    $('#profAddress').value=p.address||''; $('#profNotes').value=p.notes||'';
+    // ניחוש דומיין מתוך האימייל (אם יש) לאחזור לוגו
+    $('#profDomain').value = (p.email||'').includes('@') ? p.email.split('@')[1].trim() : '';
+    profLogoStatus(p.has_logo);
+    $('#profileModal').style.display='flex';
+  }
+  async function fetchProfileLogo(){
+    const d=$('#profDomain').value.trim();
+    if(!d){ toast('הזן דומיין (למשל apple.com)'); return; }
+    toast('מאחזר לוגו מהאינטרנט…');
+    const r=await window.pywebview.api.fetch_logo_from_domain(_profileProject, d);
+    if(r.ok){ toast('✓ הלוגו אוחזר בהצלחה'); profLogoStatus(true); }
+    else toast('✕ '+(r.error||'לא נמצא לוגו'));
+  }
+  function profLogoStatus(has){ const e=$('#profLogoStatus');
+    e.textContent=has?'✓ לוגו קיים':'אין לוגו'; e.style.color=has?'var(--accent-deep)':'var(--muted)'; }
+  async function saveProfile(){
+    await window.pywebview.api.save_project_profile(_profileProject, {
+      client_name:$('#profClient').value, contact:$('#profContact').value, phone:$('#profPhone').value,
+      email:$('#profEmail').value, address:$('#profAddress').value, notes:$('#profNotes').value });
+    $('#profileModal').style.display='none'; toast('✓ הפרופיל נשמר');
+  }
+  async function uploadProfileLogo(){
+    const r=await window.pywebview.api.upload_client_logo(_profileProject);
+    if(r.ok){ toast('✓ הלוגו הועלה'); profLogoStatus(true); } else if(!r.canceled) toast('✕ '+(r.error||'נכשל'));
+  }
+  async function removeProfileLogo(){
+    const r=await window.pywebview.api.remove_client_logo(_profileProject);
+    if(r.removed) toast('הלוגו הוסר'); profLogoStatus(false);
+  }
+
+  // ---------- Meeting chat (req 9) ----------
+  let _chatHistory=[];
+  function appendChat(role, text){
+    const box=$('#chatMsgs'); if(!box) return;
+    const hint=box.querySelector('.chat-hint'); if(hint) hint.remove();
+    const d=document.createElement('div'); d.className='cmsg '+(role==='user'?'user':'bot');
+    d.textContent=text; box.appendChild(d); box.scrollTop=box.scrollHeight; return d;
+  }
+  async function sendChat(){
+    const inp=$('#chatInput'); if(!inp) return;
+    const msg=inp.value.trim(); if(!msg) return;
+    const m=window._detailMeeting; if(!m||!m.id){ toast('צ׳אט זמין לפגישות שמורות'); return; }
+    inp.value=''; appendChat('user', msg);
+    _chatHistory.push({role:'user', text:msg});
+    const typing=appendChat('bot','כותב…'); typing.classList.add('typing');
+    let r;
+    try{ r=await window.pywebview.api.meeting_chat(m.id, m.project, msg, _chatHistory.slice(0,-1)); }
+    catch(e){ r={ok:false, error:String(e)}; }
+    typing.remove();
+    if(r&&r.ok){
+      appendChat('bot', r.reply); _chatHistory.push({role:'assistant', text:r.reply});
+      if(r.edited && r.summary){            // הצ׳אט ערך את הסיכום המקורי -> עדכון מיידי
+        window._detailMeeting.summary = r.summary;
+        reRenderSummaryParts();
+        toast('✓ הסיכום עודכן לפי בקשתך');
+      }
+    } else appendChat('bot', '⚠ '+((r&&r.error)||'שגיאה'));
+  }
+  function openProject(name){
+    nav('summaries');
+    const sel = $('#sumFilter');
+    setTimeout(()=>{ if([...sel.options].some(o=>o.value===name)){ sel.value=name; renderSummaries(); } }, 60);
+  }
+  async function createProjectFromView(){
+    const name = $('#projNewName').value.trim();
+    if(!name) return;
+    const r = await window.pywebview.api.create_project(name);
+    if(!r.ok){ toast('✕ '+r.error); return; }
+    $('#projNewName').value='';
+    await loadProjects(); loadProjectsView();
+    toast('✓ הפרויקט נוצר');
+  }
+
+  // ---------- Move between projects ----------
+  function moveSelect(currentProject, onchangeCall){
+    const opts = _projects.filter(p=>p!==currentProject).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    if(!opts) return '';
+    return `<select class="move-select" onchange="${onchangeCall}"><option value="">↦ העבר לפרויקט…</option>${opts}</select>`;
+  }
+  async function moveMeeting(id, from, sel){
+    const to = sel.value; if(!to) return;
+    const r = await window.pywebview.api.move_meeting(id, from, to);
+    if(r.ok){ toast('✓ הועבר ל'+to); nav('summaries'); } else toast('✕ '+(r.error||'נכשל'));
+  }
+  async function moveRecording(path, sel){
+    const to = sel.value; if(!to) return;
+    const r = await window.pywebview.api.move_recording(path, to);
+    if(r.ok){ toast('✓ ההקלטה הועברה ל'+to); loadRecordings(); } else toast('✕ '+(r.error||'נכשל'));
+  }
+
+  // ---------- Settings: calendar auto-join ----------
+  async function loadSettings(){
+    if(!_projects||!_projects.length){ try{ _projects=await window.pywebview.api.list_projects(); }catch(e){} }
+    $('#calProject').innerHTML=(_projects||['כללי']).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    let c={}; try{ c=await window.pywebview.api.get_calendar_config(); }catch(e){}
+    $('#calEnabled').checked=!!c.enabled;
+    $('#calEmail').value=c.email||''; $('#calPass').value=c.app_password||'';
+    $('#calImap').value=c.imap_host||'imap.gmail.com';
+    if(c.project && (_projects||[]).includes(c.project)) $('#calProject').value=c.project;
+    $('#calLead').value=c.lead_seconds||60;
+    $('#calBot').checked = c.use_browser_bot!==false;
+    $('#calDocker').checked = c.use_docker_bot!==false;
+    $('#calBotName').value = c.bot_name||'Synthia Notetaker';
+    $('#calResult').textContent='';
+  }
+  function collectCalendar(){
+    return { enabled:$('#calEnabled').checked, email:$('#calEmail').value.trim(),
+      app_password:$('#calPass').value.trim(), imap_host:$('#calImap').value.trim()||'imap.gmail.com',
+      project:$('#calProject').value, lead_seconds:parseInt($('#calLead').value)||60,
+      use_browser_bot:$('#calBot').checked, use_docker_bot:$('#calDocker').checked,
+      bot_name:$('#calBotName').value.trim()||'Synthia Notetaker' };
+  }
+  async function saveCalendar(){
+    const r=await window.pywebview.api.save_calendar_config(collectCalendar());
+    if(r.ok) toast('✓ ההגדרות נשמרו'); else toast('✕ נכשל');
+  }
+  async function testCalendar(){
+    const el=$('#calResult'); el.style.color='var(--muted)'; el.innerHTML='<span class="spinner"></span> בודק חיבור…';
+    const r=await window.pywebview.api.test_calendar(collectCalendar());
+    if(!r.ok){ el.style.color='var(--red)'; el.textContent='✕ '+(r.error||'נכשל'); return; }
+    el.style.color='var(--ink)';
+    if(!r.events.length){ el.textContent='✓ החיבור תקין. לא נמצאו פגישות קרובות (הזמן את הכתובת לפגישה ביומן).'; return; }
+    el.innerHTML='✓ החיבור תקין. פגישות קרובות:<br>'+r.events.map(e=>{
+      const d=new Date(e.start); const t=d.toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      return `<div style="margin-top:6px">• <b>${esc(e.title)}</b> — ${t}${e.url?' 🔗':' (ללא קישור)'}</div>`;
+    }).join('');
+  }
+
+  // ---------- Microphones ----------
+  async function loadMics(){
+    const sel = $('#micSelect'); let mics = [];
+    try{ mics = await window.pywebview.api.list_microphones(); }catch(e){}
+    sel.innerHTML = `<option value="">ברירת מחדל של המערכת</option>` +
+      mics.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  }
+
+  // ---------- Confirm modal ----------
+  let _confirmResolve=null;
+  function askConfirm(text){ $('#confirmText').textContent=text; $('#confirmModal').style.display='flex';
+                             return new Promise(r=>_confirmResolve=r); }
+  function closeConfirm(v){ $('#confirmModal').style.display='none'; if(_confirmResolve){_confirmResolve(v);_confirmResolve=null;} }
+  async function deleteMeeting(id, project){
+    if(!await askConfirm('למחוק את הסיכום לצמיתות?')) return;
+    await window.pywebview.api.delete_meeting(id, project); toast('הסיכום נמחק'); nav('summaries');
+  }
+  async function deleteRecording(path){
+    if(!await askConfirm('למחוק את ההקלטה לצמיתות?')) return;
+    await window.pywebview.api.delete_recording(path); toast('ההקלטה נמחקה'); loadRecordings();
+  }
+
+  // ---------- Prompt (rename) modal ----------
+  let _promptResolve=null;
+  function askPrompt(title, value){ $('#promptTitle').textContent=title; $('#promptInput').value=value||'';
+    $('#promptModal').style.display='flex'; setTimeout(()=>$('#promptInput').focus(),50);
+    return new Promise(r=>_promptResolve=r); }
+  function closePrompt(ok){ const v=$('#promptInput').value.trim(); $('#promptModal').style.display='none';
+    if(_promptResolve){_promptResolve(ok?v:null);_promptResolve=null;} }
+  async function renameMeeting(id, project){
+    const v=await askPrompt('שם הפגישה', (window._detailMeeting&&(window._detailMeeting.summary||{}).title)||'');
+    if(v==null||!v) return;
+    const r=await window.pywebview.api.rename_meeting(id, project, v);
+    if(r.ok){ toast('✓ השם עודכן'); openMeeting(id, project); } else toast('✕ '+(r.error||'נכשל'));
+  }
+  async function renameRecording(path, curName){
+    const v=await askPrompt('שם ההקלטה', curName||'');
+    if(v==null||!v) return;
+    const r=await window.pywebview.api.rename_recording(path, v);
+    if(r.ok){ toast('✓ שם ההקלטה עודכן'); loadRecordings(); } else toast('✕ '+(r.error||'נכשל'));
+  }
+  async function renameProject(name){
+    const v=await askPrompt('שם הפרויקט', name||'');
+    if(v==null||!v||v===name) return;
+    const r=await window.pywebview.api.rename_project(name, v);
+    if(r.ok){ toast('✓ שם הפרויקט עודכן'); await loadProjects(); loadProjectsView(); } else toast('✕ '+(r.error||'נכשל'));
+  }
+
+  // ---------- Name modal ----------
+  let _pendingRec = null;
+  function showNameModal(rec){ _pendingRec=rec; $('#meetingNameInput').value=''; $('#nameModal').style.display='flex';
+                               setTimeout(()=>$('#meetingNameInput').focus(),50); }
+  async function confirmName(skip){
+    const title = skip ? '' : $('#meetingNameInput').value.trim();
+    $('#nameModal').style.display='none';
+    const rec = _pendingRec; _pendingRec=null; if(!rec) return;
+    nav('processing'); setProcessing(true); startProcTimer();
+    $('#proc-status').innerHTML='<span class="spinner"></span> מעבד…';
+    $('#processing-output').innerHTML=procCardHTML();
+    const res=await window.pywebview.api.process_recording(rec.path, rec.project, title);
+    showProcessed(res); afterProcessing(res);
+  }
+
+  // ---------- Formatted summary ----------
+  let formState = {project_name:'',topic:'',date:'',location:'',participants:[],findings:[],project:''};
+  function renderFormatForm(){
+    $('#fProject').value=formState.project_name||''; $('#fTopic').value=formState.topic||'';
+    $('#fDate').value=formState.date||''; $('#fLocation').value=formState.location||'';
+    // רשימת פרויקטים ללוגו (ברירת מחדל: הפרויקט שממנו הגיע הסיכום, אחרת כללי)
+    const sel=$('#fLogoProject');
+    const projs=(_projects&&_projects.length)?_projects:['כללי'];
+    sel.innerHTML=projs.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    sel.value=(formState.project && projs.includes(formState.project))?formState.project:projs[0];
+    refreshLogoStatus();
+    renderParticipants(); renderFindings();
+  }
+  async function refreshLogoStatus(){
+    const proj=$('#fLogoProject').value||'כללי';
+    let s={exists:false};
+    try{ s=await window.pywebview.api.client_logo_status(proj); }catch(e){}
+    $('#logoStatus').textContent = s.exists ? '✓ לוגו קיים לפרויקט זה' : 'אין לוגו לפרויקט זה';
+    $('#logoStatus').style.color = s.exists ? 'var(--accent-deep)' : 'var(--muted)';
+  }
+  async function uploadClientLogo(){
+    const proj=$('#fLogoProject').value||'כללי';
+    const r=await window.pywebview.api.upload_client_logo(proj);
+    if(r.ok){ toast('✓ הלוגו הועלה'); refreshLogoStatus(); }
+    else if(!r.canceled) toast('✕ '+(r.error||'ההעלאה נכשלה'));
+  }
+  async function removeClientLogo(){
+    const proj=$('#fLogoProject').value||'כללי';
+    const r=await window.pywebview.api.remove_client_logo(proj);
+    if(r.removed) toast('הלוגו הוסר'); else toast('אין לוגו להסרה');
+    refreshLogoStatus();
+  }
+  function renderParticipants(){
+    $('#participantsList').innerHTML = (formState.participants||[]).map((p,i)=>`
+      <div class="fld-row">
+        <input placeholder="שם" value="${esc(p.name||'')}" oninput="updP(${i},'name',this.value)">
+        <input placeholder="תפקיד" value="${esc(p.role||'')}" oninput="updP(${i},'role',this.value)">
+        <input placeholder="חברה" value="${esc(p.company||'')}" oninput="updP(${i},'company',this.value)">
+        <button class="row-del" onclick="delP(${i})">✕</button>
+      </div>`).join('');
+  }
+  function renderFindings(){
+    $('#findingsList').innerHTML = (formState.findings||[]).map((f,i)=>`
+      <div class="find-box">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <b style="color:var(--accent-deep);font-family:var(--mono)">${String(i+1).padStart(2,'0')}</b>
+          <button class="row-del" style="margin-right:auto" onclick="delF(${i})">✕</button>
+        </div>
+        <textarea placeholder="תיאור הממצא" oninput="updF(${i},'description',this.value)">${esc(f.description||'')}</textarea>
+        <div class="sub2">
+          <input placeholder="אחראי" value="${esc(f.responsible||'')}" oninput="updF(${i},'responsible',this.value)">
+          <input placeholder="מועד" value="${esc(f.due||'')}" oninput="updF(${i},'due',this.value)">
+        </div>
+        <input style="margin-top:8px" placeholder="הערה (אופציונלי)" value="${esc(f.note||'')}" oninput="updF(${i},'note',this.value)">
+      </div>`).join('');
+  }
+  function updP(i,k,v){ formState.participants[i][k]=v; }
+  function delP(i){ formState.participants.splice(i,1); renderParticipants(); }
+  function addParticipant(){ formState.participants.push({name:'',role:'',company:''}); renderParticipants(); }
+  function updF(i,k,v){ formState.findings[i][k]=v; }
+  function delF(i){ formState.findings.splice(i,1); renderFindings(); }
+  function addFinding(){ formState.findings.push({description:'',responsible:'',due:'',note:''}); renderFindings(); }
+  function collectFormat(){ return { project_name:$('#fProject').value, topic:$('#fTopic').value,
+      date:$('#fDate').value, location:$('#fLocation').value,
+      participants:formState.participants, findings:formState.findings }; }
+  async function exportFormatPdf(){
+    // קודם תצוגה מקדימה, ורק אז הורדה (req 7)
+    const proj = ($('#fLogoProject') && $('#fLogoProject').value) || '';
+    window._previewProj = proj;
+    toast('מכין תצוגה מקדימה…');
+    const r = await window.pywebview.api.preview_format_html(collectFormat(), proj);
+    if(!r.ok){ toast('✕ '+(r.error||'נכשל')); return; }
+    $('#previewFrame').srcdoc = r.html;
+    $('#previewModal').style.display='flex';
+  }
+  async function confirmDownloadPdf(){
+    $('#previewModal').style.display='none';
+    toast('מכין PDF…');
+    const r = await window.pywebview.api.export_format_pdf(collectFormat(), window._previewProj||'');
+    if(r.ok) toast('✓ ה-PDF נשמר ונפתח'); else if(!r.canceled) toast('✕ '+(r.error||'נכשל'));
+  }
+  // מד התקדמות ליצירת הפורמט (req 4)
+  function showFormatProgress(pct){
+    const wrap=$('#formatProgressWrap'); if(!wrap) return;
+    wrap.innerHTML = `<div class="fmt-prog">
+      <div class="progress-label"><span class="spinner"></span> בונה את הפורמט מהסיכום… <b id="fmtPct">${pct||0}%</b></div>
+      <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="fmtFill" style="width:${pct||0}%"></div></div></div>`;
+  }
+  window.formatProgress = function(p){
+    const fill=$('#fmtFill'), pc=$('#fmtPct');
+    if(fill) fill.style.width=p.percent+'%';
+    if(pc) pc.textContent=p.percent+'%';
+  };
+  async function formatFromMeeting(id, project){
+    // עוברים מיד למסך העריכה, מציגים מד אחוזים, וממלאים ברקע
+    formState.project = project || '';
+    nav('format');
+    showFormatProgress(0);
+    let r;
+    try { r = await window.pywebview.api.extract_format(id); }
+    catch(e){ r = {ok:false, error:String(e)}; }
+    $('#formatProgressWrap').innerHTML = '';
+    if(!r || !r.ok){
+      toast('✕ '+((r&&r.error)||'מילוי הפורמט נכשל - אפשר למלא ידנית'));
+      return;
+    }
+    formState = Object.assign({project_name:'',topic:'',date:'',location:'',participants:[],findings:[],project:project||''}, r.fields);
+    formState.project = project || '';
+    renderFormatForm();
+    toast('✓ הפורמט מולא מהסיכום');
+  }
+
+  // ---------- Projects list ----------
+  let _projects = ['כללי'];
+  async function loadProjects(){
+    _projects = await window.pywebview.api.list_projects();
+    const sel = $('#projSelect');
+    if (sel) sel.innerHTML = _projects.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  }
+  function newProject(){ $('#newProjInput').style.display='inline-block'; $('#newProjOk').style.display='inline-flex'; $('#newProjInput').focus(); }
+  async function createProject(){
+    const name = $('#newProjInput').value.trim(); if(!name) return;
+    const r = await window.pywebview.api.create_project(name);
+    if(!r.ok){ toast('✕ '+r.error); return; }
+    await loadProjects(); $('#projSelect').value=r.name;
+    $('#newProjInput').value=''; $('#newProjInput').style.display='none'; $('#newProjOk').style.display='none';
+    toast('✓ הפרויקט נוצר');
+  }
+  function fillFilter(sel, items){
+    const projs = [...new Set(items.map(i=>i.project))];
+    const cur = sel.value || '__all__';
+    sel.innerHTML = `<option value="__all__">כל הלקוחות</option>` + projs.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    sel.value = [...sel.options].some(o=>o.value===cur) ? cur : '__all__';
+  }
+
+  // ---------- Dashboard / summaries ----------
+  let _meetings = [];
+  async function loadSummaries(){
+    $('#summaries-list').innerHTML = '<div class="empty">טוען…</div>';
+    _meetings = await window.pywebview.api.list_meetings();
+    fillFilter($('#sumFilter'), _meetings);
+    renderStats();
+    renderSummaries();
+  }
+  function renderStats(){
+    const done = _meetings.filter(m=>m.summarized);
+    const tasks = done.reduce((a,m)=>a+(m.n_tasks||0),0);
+    const projs = new Set(done.map(m=>m.project)).size;
+    const pending = _meetings.length - done.length;
+    $('#dashStats').innerHTML = `
+      <div class="stat"><div class="num">${done.length}</div><div class="lbl">פגישות סוכמו</div></div>
+      <div class="stat"><div class="num">${tasks}</div><div class="lbl">משימות שזוהו</div></div>
+      <div class="stat"><div class="num">${pending}</div><div class="lbl">תמלולים ממתינים לסיכום</div></div>`;
+  }
+  function renderSummaries(){
+    const list = $('#summaries-list');
+    const f = $('#sumFilter').value;
+    const q = ($('#sumSearch').value||'').trim().toLowerCase();
+    let items = _meetings;
+    if (f && f!=='__all__') items = items.filter(m=>m.project===f);
+    if(q) items = items.filter(m=>(m.title+' '+m.preview).toLowerCase().includes(q));
+    if (!items.length){ list.innerHTML = '<div class="list"><div class="empty"><span class="big">◴</span>אין פגישות להצגה.<br>לחץ "+ פגישה חדשה" כדי להתחיל.</div></div>'; return; }
+    list.innerHTML = '<div class="list">' + items.map(m => {
+      // פגישה שסוכמה -> פותחת פירוט; פגישה שלא סוכמה -> כפתור "הפק סיכום"
+      if (m.summarized){
+        return `<div class="mrow" onclick="openMeeting('${m.id}','${esc(m.project)}')">
+          <div class="when">${esc(m.date)}</div>
+          <div class="main">
+            <div class="ttl">${esc(nd(m.title))}</div>
+            <div class="meta">${esc(m.project)}${m.n_points?` · ${m.n_points} נקודות מפתח`:''}</div>
+          </div>
+          ${m.n_tasks?`<span class="pill tasks">${m.n_tasks} משימות</span>`:''}
+        </div>`;
+      }
+      const st = m.status==='failed' ? 'הסיכום נכשל' : m.status==='canceled' ? 'הסיכום בוטל' : 'ממתין לסיכום';
+      return `<div class="mrow" onclick="openMeeting('${m.id}','${esc(m.project)}')">
+        <div class="when">${esc(m.date)}</div>
+        <div class="main">
+          <div class="ttl">${esc(nd(m.title))}</div>
+          <div class="meta">${esc(m.project)} · תמלול ${Number(m.tr_chars||0).toLocaleString()} תווים</div>
+        </div>
+        <span class="pill amber">${st}</span>
+        <button class="btn btn-accent" style="padding:7px 13px" onclick="event.stopPropagation();summarizeMeeting('${m.id}','${esc(m.project)}')">הפק סיכום</button>
+      </div>`;
+    }).join('') + '</div>';
+  }
+
+  async function openMeeting(id, project){
+    const m = await window.pywebview.api.get_meeting(id, project);
+    if (!m){ toast('הסיכום לא נמצא'); return; }
+    window._detailMeeting = m;
+    _chatHistory = [];                       // איפוס שיחת הצ׳אט לפגישה החדשה
+    $('#detail-output').innerHTML = renderSummary(m, {withExport:true});
+    nav('detail');
+  }
+  async function exportWord(id){
+    toast('מכין קובץ Word…');
+    const r = await window.pywebview.api.export_word(id);
+    if (r.ok) toast('✓ נשמר ונפתח ב-Word'); else if (!r.canceled) toast('✕ '+(r.error||'ייצוא נכשל'));
+  }
+
+  // ---------- My Tasks ----------
+  // ---------- Calendar (bot's mailbox calendar) ----------
+  async function loadCalendar(){
+    const el=$('#calendar-list'), sub=$('#calSub');
+    el.innerHTML='<div class="empty"><span class="spinner"></span> טוען מהיומן…</div>';
+    let r;
+    try{ r=await window.pywebview.api.calendar_upcoming(); }catch(e){ r={ok:false,error:String(e)}; }
+    if(!r||!r.ok){
+      el.innerHTML='<div class="empty"><span class="big">📅</span>'+esc((r&&r.error)||'טעינה נכשלה')+'<br>הגדר אימייל וסיסמה בלשונית "הגדרות".</div>';
+      return;
+    }
+    if(sub) sub.textContent=(r.enabled?'✓ הצטרפות אוטומטית פעילה':'⚠ הצטרפות אוטומטית כבויה (ראה הגדרות)')+' · בוט: '+esc(r.bot_name||'');
+    const evs=r.events||[];
+    if(!evs.length){
+      el.innerHTML='<div class="empty"><span class="big">📅</span>אין פגישות קרובות ביומן.<br>הזמן את כתובת המייל של המערכת לפגישה כדי שתופיע כאן.</div>';
+      return;
+    }
+    const groups={};
+    evs.forEach(e=>{ const k=new Date(e.start).toLocaleDateString('he-IL',{weekday:'long',day:'2-digit',month:'2-digit'});
+                     (groups[k]=groups[k]||[]).push(e); });
+    const tt=p=>p.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    el.innerHTML=Object.entries(groups).map(([day,list])=>
+      `<div class="cal-day-h">${esc(day)}</div>`+
+      '<div class="list">'+list.map(e=>{
+        const s=new Date(e.start), en=new Date(e.end), plat=e.platform;
+        const lbl=plat==='meet'?'Meet':plat==='zoom'?'Zoom':plat==='teams'?'Teams':'';
+        const join=(r.use_docker_bot!==false && plat)?'<span class="pill tasks">הבוט יצטרף</span>'
+                 :(e.url?'<span class="tag">קישור</span>':'<span class="pill amber">ללא קישור</span>');
+        return `<div class="mrow" style="cursor:default">
+          <div class="cal-time"><b>${tt(s)}</b><span>${tt(en)}</span></div>
+          <div class="main"><div class="ttl">${esc(nd(e.title))}</div>
+            ${lbl?`<span class="plat plat-${plat}">${lbl}</span>`:'<span class="meta">פגישה ללא קישור מזוהה</span>'}</div>
+          ${join}
+        </div>`;
+      }).join('')+'</div>'
+    ).join('');
+  }
+
+  function taskRowHTML(t){
+    const meta=[]; if(t.owner)meta.push(`<b>אחראי:</b> ${esc(t.owner)}`); if(t.due)meta.push(`<b>מועד:</b> ${esc(t.due)}`);
+    if(t.source_title)meta.push(`מתוך: ${esc(t.source_title)}`);
+    return `<div class="task">
+      <input type="checkbox" ${t.done?'checked':''} onchange="toggleMyTask('${t.id}')">
+      <div style="flex:1">
+        <div class="tk" style="${t.done?'text-decoration:line-through;opacity:.5':''}">${esc(t.task)}</div>
+        ${meta.length?`<div class="meta">${meta.join(' · ')}</div>`:''}
+      </div>
+      <button class="icon-btn" title="מחק" onclick="deleteMyTask('${t.id}')">🗑</button>
+    </div>`;
+  }
+  async function loadMyTasks(){
+    const el = $('#mytasks-list');
+    el.innerHTML = '<div class="empty">טוען…</div>';
+    const tasks = await window.pywebview.api.list_my_tasks();
+    if(!_projects||!_projects.length){ try{ _projects = await window.pywebview.api.list_projects(); }catch(e){} }
+    if (!tasks.length){
+      el.innerHTML = '<div class="empty"><span class="big">✓</span>אין עדיין משימות.<br>פתח פגישה, עבור ללשונית "משימות" ולחץ "+ למשימות שלי".</div>';
+      return;
+    }
+    // קיבוץ לתת-תיקיות לפי פרויקט (לפי סדר רשימת הפרויקטים)
+    const groups={}; tasks.forEach(t=>{ const k=t.project||'כללי'; (groups[k]=groups[k]||[]).push(t); });
+    const order=[...new Set([...(_projects||[]), ...Object.keys(groups)])].filter(p=>groups[p]&&groups[p].length);
+    const open = tasks.filter(t=>!t.done).length;
+    el.innerHTML = `<div class="sub" style="margin-bottom:14px">${open} פתוחות · ${tasks.length} סה"כ · ${order.length} פרויקטים</div>` +
+      order.map(proj=>{
+        const list=groups[proj]; const openN=list.filter(t=>!t.done).length;
+        return `<div class="tfolder">
+          <div class="tfolder-head" onclick="this.parentNode.classList.toggle('collapsed')">
+            <span class="tf-caret">▾</span>
+            <span class="tf-name">📁 ${esc(proj)}</span>
+            <span class="pill tasks">${openN}/${list.length}</span>
+          </div>
+          <div class="tfolder-body">${list.map(taskRowHTML).join('')}</div>
+        </div>`;
+      }).join('');
+  }
+  async function toggleMyTask(id){ await window.pywebview.api.toggle_my_task(id); loadMyTasks(); }
+  async function deleteMyTask(id){ await window.pywebview.api.delete_my_task(id); toast('המשימה הוסרה'); loadMyTasks(); }
+  async function addTaskToMine(idx){
+    const m = window._detailMeeting; if(!m) return;
+    const s = m.summary || m; const a = (s.action_items||[])[idx]; if(!a) return;
+    const r = await window.pywebview.api.add_my_task({
+      task:a.task, owner:a.owner||'', due:a.due||'',
+      source_id:m.id||'', source_title:(s.title||''), project:m.project||'' });
+    if(r.ok) toast(r.duplicate ? 'המשימה כבר ב"המשימות שלי"' : '✓ נוסף ל"המשימות שלי"');
+    else toast('✕ '+(r.error||'נכשל'));
+  }
+
+  // ---------- Upload media (Zoom / video / audio) ----------
+  async function uploadMedia(){
+    const proj = ($('#projSelect') && $('#projSelect').value) || 'כללי';
+    toast('בחר קובץ להעלאה…');
+    const r = await window.pywebview.api.upload_media(proj);
+    if(!r.ok){ if(!r.canceled) toast('✕ '+(r.error||'ההעלאה נכשלה')); return; }
+    showNameModal({path:r.path, project:r.project});
+  }
+
+  // ---------- Recordings ----------
+  let _recordings = [];
+  async function loadRecordings(){
+    $('#recordings-list').innerHTML = '<div class="empty">טוען…</div>';
+    _recordings = await window.pywebview.api.list_recordings();
+    fillFilter($('#recFilter'), _recordings);
+    renderRecordings();
+  }
+  function renderRecordings(){
+    const list = $('#recordings-list');
+    const f = $('#recFilter').value;
+    const items = (f && f!=='__all__') ? _recordings.filter(r=>r.project===f) : _recordings;
+    if (!items.length){ list.innerHTML = '<div class="empty"><span class="big">♪</span>אין הקלטות להצגה.</div>'; return; }
+    list.innerHTML = items.map(r => {
+      const p = esc(r.path).replace(/\\/g,'\\\\');
+      return `<div class="rec-row">
+        <div class="rec-info">
+          <div class="rec-name">${r.is_video?'🎬 ':''}${esc(r.name)}</div>
+          <div class="rec-meta"><span class="tag proj">${esc(r.project)}</span>${r.is_video?' <span class="tag">וידאו</span>':''} ${esc(r.date)} · ${r.duration} · ${r.size_mb}MB</div>
+        </div>
+        <button class="btn btn-ghost" onclick="playRec('${p}')">▶ נגן</button>
+        <button class="btn btn-accent" onclick="processRec('${p}','${esc(r.project)}')">תמלל וסכם</button>
+        ${moveSelect(r.project, `moveRecording('${p}',this)`)}
+        <button class="icon-btn" title="שנה שם" onclick="renameRecording('${p}','${esc(r.name)}')">✎</button>
+        <button class="icon-btn" title="מחק" onclick="deleteRecording('${p}')">🗑</button>
+      </div>`;
+    }).join('');
+  }
+  async function playRec(path){ await window.pywebview.api.play_recording(path); }
+  async function processRec(path, project){
+    nav('processing'); setProcessing(true); startProcTimer();
+    $('#proc-status').innerHTML = '<span class="spinner"></span> מעבד…';
+    $('#processing-output').innerHTML = procCardHTML();
+    const res = await window.pywebview.api.process_recording(path, project);
+    showProcessed(res); afterProcessing(res);
+  }
+
+  // processing card with progress + live transcript
+  function procCardHTML(summaryOnly){
+    return `<div class="card">
+      <div class="progress-wrap">
+        <div class="progress-label" id="progLabel">${summaryOnly?'מסכם עם Gemini…':'מתמללים את הפגישה…'}</div>
+        <div class="progress-bar"><div class="progress-fill${summaryOnly?' indeterminate':''}" id="progFill"></div></div>
+      </div>
+      ${summaryOnly?'':'<h2>תמלול חי</h2><div class="transcript live" id="transcript"></div>'}</div>`;
+  }
+
+  // ---------- Live updates from Python ----------
+  window.addSegment = function(seg){
+    markProgress();
+    const tEl = $('#transcript'); if(!tEl) return;
+    const d=document.createElement('div'); d.className='seg';
+    d.innerHTML=`<span class="t">${seg.start.toFixed(0)}s</span>${esc(seg.text)}`;
+    tEl.appendChild(d); tEl.scrollTop=tEl.scrollHeight;
+  };
+  window.transcribeProgress = function(p){
+    markProgress();
+    const f=$('#progFill'), l=$('#progLabel');
+    if(f){ f.classList.remove('indeterminate'); f.style.width=p.percent+'%'; }
+    if(l) l.textContent = 'מתמללים ומזהים דוברים… ' + p.percent + '%';
+  };
+  window.setProcessingStatus = function(txt){
+    markProgress();
+    const l=$('#progLabel'); if(l) l.textContent = txt;
+    const f=$('#progFill'); if(f){ f.classList.remove('indeterminate'); f.style.width='0%'; }
+    const ps=$('#proc-status'); if(ps) ps.innerHTML='<span class="spinner"></span> '+txt;
+    const rs=$('#recStatus'); if(rs) rs.innerHTML='<span class="spinner"></span> '+txt;
+  };
+  window.summarizeProgress = function(p){
+    markProgress();
+    const f=$('#progFill'), l=$('#progLabel');
+    if(f){ f.classList.remove('indeterminate'); f.style.width=p.percent+'%'; }
+    if(l) l.textContent = 'מזקקים תובנות… ' + p.percent + '%';
+  };
+
+  // ---------- Render meeting (tabbed) ----------
+  function renderSummary(m, opts={}){
+    const s = m.summary || m;
+    const nTasks = (s.action_items||[]).length;
+    let head = `<div class="detail-head"><div>
+        <div class="sum-title">${et(s.title)}</div>
+        <div class="sum-date">${esc(m.date||'')}${m.project?` · ${esc(m.project)}`:''}</div></div>`;
+    if (opts.withExport && m.id){
+      head += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${moveSelect(m.project, `moveMeeting('${m.id}','${esc(m.project)}',this)`)}
+        <button class="btn btn-ghost" onclick="renameMeeting('${m.id}','${esc(m.project)}')">✎ שם</button>
+        <button class="btn btn-ghost" onclick="formatFromMeeting('${m.id}','${esc(m.project)}')">סיכום מעוצב</button>
+        <button class="btn btn-ghost" onclick="exportWord('${m.id}')">↓ Word</button>
+        <button class="icon-btn" title="מחק" onclick="deleteMeeting('${m.id}','${esc(m.project)}')">🗑</button></div>`;
+    }
+    head += `</div>`;
+
+    if (m.audio_path){
+      head += `<div class="player">
+        <button class="play" onclick="playRec('${esc(m.audio_path).replace(/\\/g,'\\\\')}')">▶</button>
+        <div class="track"><div class="fill"></div></div>
+        <span class="tt">לחץ לנגינה באודיו</span></div>`;
+    }
+
+    const editable = !!(opts.withExport && m.id);
+
+    // Summary tab = (כפתור עריכה) + תוכן הסיכום + צ׳אט בתחתית
+    let sumPane = '';
+    if (editable) sumPane += `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <button class="btn btn-ghost" id="editSumBtn" onclick="enterSummaryEdit()">✎ ערוך סיכום ידנית</button></div>`;
+    sumPane += `<div id="summaryContent">${summaryReadHTML(s)}</div>`;
+    if (editable) sumPane += chatBlockHTML();
+
+    // Tasks tab
+    const tasksPane = `<div id="tasksContent">${tasksHTML(s)}</div>`;
+
+    // Transcript tab
+    const trPane = m.transcript ? `<div class="transcript">${et(m.transcript)}</div>` : '<div class="empty">אין תמלול זמין.</div>';
+
+    const tabs = `<div class="tabs-wrap">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab(this,0)">סיכום</button>
+        <button class="tab" onclick="switchTab(this,1)">תמלול</button>
+        <button class="tab" onclick="switchTab(this,2)">משימות<span class="cnt">${nTasks}</span></button>
+      </div>
+      <div class="tabpane active">${sumPane}</div>
+      <div class="tabpane">${trPane}</div>
+      <div class="tabpane">${tasksPane}</div>
+    </div>`;
+    return head + tabs;
+  }
+
+  // ---------- Summary render/edit helpers ----------
+  function summaryReadHTML(s){
+    let h = `<div class="tldr">${et(s.summary)||'—'}</div>`;
+    if (s.topics && s.topics.length)
+      h += `<div class="block"><h3>פירוט הנושאים</h3>` + s.topics.map(t=>
+        `<div class="topic"><div class="topic-ttl">${et(t.title)}</div><ul>${(t.points||[]).map(p=>`<li>${et(p)}</li>`).join('')}</ul></div>`
+      ).join('') + `</div>`;
+    if (s.decisions&&s.decisions.length)
+      h += `<div class="block"><h3>החלטות שהתקבלו</h3><ul>${s.decisions.map(d=>`<li>${et(d)}</li>`).join('')}</ul></div>`;
+    if (s.key_points&&s.key_points.length)
+      h += `<div class="block"><h3>נקודות מפתח</h3><ul>${s.key_points.map(p=>`<li>${et(p)}</li>`).join('')}</ul></div>`;
+    return h;
+  }
+  function tasksHTML(s){
+    const items = s.action_items||[];
+    if (!items.length) return '<div class="empty">לא זוהו משימות בפגישה זו.</div>';
+    return items.map((a,i)=>{
+      const meta=[]; if(a.owner)meta.push(`<b>אחראי:</b> ${et(a.owner)}`); if(a.due)meta.push(`<b>מועד:</b> ${et(a.due)}`);
+      return `<div class="task"><input type="checkbox"><div style="flex:1"><div class="tk">${et(a.task)}</div>${meta.length?`<div class="meta">${meta.join(' · ')}</div>`:''}</div>`+
+             `<button class="btn btn-ghost" style="padding:6px 12px;font-size:13px" onclick="addTaskToMine(${i})">+ למשימות שלי</button></div>`;
+    }).join('');
+  }
+  function chatBlockHTML(){
+    return `<div class="block" style="margin-top:26px"><h3>צ׳אט על הפגישה ✦</h3>
+      <div class="chat" id="chatBox">
+        <div class="chat-msgs" id="chatMsgs"><div class="chat-hint">שאל שאלה, חפש משהו בתמלול, או בקש לשנות/להוסיף/לתקן משהו בסיכום - השינוי יוטמע בסיכום המקורי.</div></div>
+        <div class="chat-input">
+          <textarea id="chatInput" rows="1" placeholder="כתוב הודעה… (Enter לשליחה, Shift+Enter לשורה חדשה)" onkeydown="chatKey(event)"></textarea>
+          <button class="btn btn-primary" onclick="sendChat()">שלח</button>
+        </div>
+      </div></div>`;
+  }
+  function reRenderSummaryParts(){
+    const s=(window._detailMeeting||{}).summary||{};
+    const sc=$('#summaryContent'); if(sc) sc.innerHTML=summaryReadHTML(s);
+    const tc=$('#tasksContent'); if(tc) tc.innerHTML=tasksHTML(s);
+    const cnt=document.querySelector('.view.active .tab .cnt'); if(cnt) cnt.textContent=(s.action_items||[]).length;
+    const eb=$('#editSumBtn'); if(eb) eb.style.display='';
+  }
+  // ----- manual summary edit (req 3) -----
+  function enterSummaryEdit(){
+    const s=(window._detailMeeting||{}).summary||{};
+    const sc=$('#summaryContent'); if(!sc) return;
+    const topicsText=(s.topics||[]).map(t=>`### ${t.title}\n`+(t.points||[]).join('\n')).join('\n\n');
+    const tasksText=(s.action_items||[]).map(a=>[a.task,a.owner,a.due].filter(Boolean).join(' | ')).join('\n');
+    sc.innerHTML = `
+      <div class="fld"><label>תקציר</label><textarea id="edSummary" style="min-height:120px">${esc(s.summary||'')}</textarea></div>
+      <div class="fld"><label>נושאים — שורה שמתחילה ב־### היא כותרת נושא, וכל שורה אחריה היא נקודה</label><textarea id="edTopics" style="min-height:170px">${esc(topicsText)}</textarea></div>
+      <div class="fld"><label>החלטות — שורה לכל החלטה</label><textarea id="edDecisions" style="min-height:80px">${esc((s.decisions||[]).join('\n'))}</textarea></div>
+      <div class="fld"><label>נקודות מפתח — שורה לכל נקודה</label><textarea id="edKeyPoints" style="min-height:80px">${esc((s.key_points||[]).join('\n'))}</textarea></div>
+      <div class="fld"><label>משימות — שורה לכל משימה (אפשר: משימה | אחראי | מועד)</label><textarea id="edTasks" style="min-height:100px">${esc(tasksText)}</textarea></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="saveSummaryEdit()">שמור סיכום</button>
+        <button class="btn btn-ghost" onclick="reRenderSummaryParts()">ביטול</button></div>`;
+    const eb=$('#editSumBtn'); if(eb) eb.style.display='none';
+  }
+  async function saveSummaryEdit(){
+    const m=window._detailMeeting; if(!m||!m.id) return;
+    const lines = el => ($(el).value||'').split('\n').map(x=>x.trim()).filter(Boolean);
+    const topics=[]; let cur=null;
+    ($('#edTopics').value||'').split('\n').forEach(line=>{ const t=line.trim();
+      if(t.startsWith('###')){ cur={title:t.replace(/^#+/,'').trim(),points:[]}; topics.push(cur); }
+      else if(t){ if(!cur){ cur={title:'',points:[]}; topics.push(cur);} cur.points.push(t); } });
+    const s = Object.assign({}, m.summary||{}, {
+      summary:$('#edSummary').value.trim(), topics:topics,
+      decisions:lines('#edDecisions'), key_points:lines('#edKeyPoints'),
+      action_items: lines('#edTasks').map(line=>{ const p=line.split('|').map(y=>y.trim()); return {task:p[0]||'',owner:p[1]||'',due:p[2]||''}; }),
+    });
+    const r=await window.pywebview.api.update_summary(m.id, m.project, s);
+    if(r.ok){ m.summary=r.summary||s; reRenderSummaryParts(); toast('✓ הסיכום נשמר'); }
+    else toast('✕ '+(r.error||'נכשל'));
+  }
+  function chatKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } }
+
+  function retryBar(res){
+    return `<div class="card"><div class="tldr">${res.canceled?'הסיכום בוטל — ':'הסיכום לא הושלם — '}התמלול נשמר. אפשר להפיק את הסיכום שוב מבלי לתמלל מחדש.</div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="summarizeMeeting('${res.id}','${esc(res.project||'')}')">↻ נסה לסכם שוב</button>
+        <button class="btn btn-ghost" onclick="nav('summaries')">לכל הפגישות</button></div></div>`;
+  }
+  function showProcessed(res){
+    const failedSummary = !!(res.summary_error || res.status==='failed');
+    if (!res.ok){
+      $('#proc-status').innerHTML = res.canceled ? '⏹ העיבוד בוטל' : '⚠ ' + esc(res.error||'שגיאה');
+      let html = res.id ? retryBar(res) : '';
+      if (res.transcript) html += `<div class="card"><h2>תמלול (נשמר)</h2><div class="transcript">${esc(res.transcript)}</div></div>`;
+      if (html) $('#processing-output').innerHTML = html;
+      return;
+    }
+    window._detailMeeting = res;
+    _chatHistory = [];
+    $('#proc-status').innerHTML = failedSummary ? '⚠ הסיכום נכשל' : '✓ מוכן';
+    $('#processing-output').innerHTML = (failedSummary && res.id ? retryBar(res) : '') + renderSummary(res, {withExport:true});
+  }
+
+  async function summarizeMeeting(id, project){
+    nav('processing'); setProcessing(true); startProcTimer();
+    $('#proc-status').innerHTML = '<span class="spinner"></span> מסכם…';
+    $('#processing-output').innerHTML = procCardHTML(true);
+    const res = await window.pywebview.api.summarize_meeting(id, project);
+    showProcessed(res); afterProcessing(res);
+  }
+
+  // ---------- Live recording ----------
+  let recState='idle', recStart=0, recTimer=null, paused=false, pausedAt=0;
+  function fmt(s){ const m=Math.floor(s/60),x=Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'); }
+  async function togglePause(){
+    if(recState!=='recording') return;
+    const pb=$('#pauseBtn');
+    if(!paused){
+      await window.pywebview.api.pause_recording();
+      paused=true; pausedAt=Date.now(); clearInterval(recTimer);
+      pb.textContent='▶ המשך'; $('#recStatus').textContent='⏸ מושהה'; $('#recordBtn').classList.remove('recording');
+    } else {
+      await window.pywebview.api.resume_recording();
+      paused=false; recStart += (Date.now()-pausedAt);
+      recTimer=setInterval(()=>$('#timer').textContent=fmt((Date.now()-recStart)/1000),200);
+      pb.textContent='⏸ השהה'; $('#recStatus').textContent='● מקליט…'; $('#recordBtn').classList.add('recording');
+    }
+  }
+  async function toggleRecord(){
+    const btn=$('#recordBtn');
+    if (recState==='idle'){
+      if(!window.pywebview||!window.pywebview.api){ $('#recStatus').textContent='הממשק נטען, נסה שוב'; return; }
+      const proj = $('#projSelect').value || 'כללי';
+      const mic = $('#micSelect').value || null;
+      const mute = $('#muteMic').checked;
+      const video = $('#capVideo').checked;
+      btn.classList.add('recording'); $('#recStatus').textContent='● מתחיל…';
+      try{ const r=await window.pywebview.api.start_recording(proj, mic, mute, video); if(!r||!r.ok) throw new Error((r&&r.error)||'נכשל'); }
+      catch(e){ btn.classList.remove('recording'); $('#recStatus').textContent='✕ '+(e.message||e); return; }
+      recState='recording'; btn.textContent='עצור';
+      $('#recStatus').textContent = video ? '● מקליט מסך + קול…' : '● מקליט…';
+      // השהיה אינה נתמכת בהקלטת וידאו (gdigrab) - מסתירים את הכפתור
+      paused=false; $('#pauseBtn').style.display = video ? 'none' : 'inline-flex'; $('#pauseBtn').textContent='⏸ השהה';
+      recStart=Date.now(); recTimer=setInterval(()=>$('#timer').textContent=fmt((Date.now()-recStart)/1000),200);
+    } else if (recState==='recording'){
+      clearInterval(recTimer); recState='idle';
+      btn.classList.remove('recording'); btn.disabled=false; btn.textContent='הקלט';
+      $('#pauseBtn').style.display='none'; paused=false;
+      $('#timer').textContent='00:00'; $('#recStatus').textContent='מוכן להקלטה';
+      const st = await window.pywebview.api.stop_recording();
+      if(!st.ok){ toast('✕ '+(st.error||'שגיאת הקלטה')); return; }
+      showNameModal({path: st.path, project: st.project});
+    }
+  }
+
+  // ---------- Init ----------
+  async function init(){
+    try{ await loadProjects(); }catch(e){}
+    let st={mode:'home'};
+    try{ st=await window.pywebview.api.get_startup(); }catch(e){}
+    if (st.mode==='process'){
+      nav('processing'); setProcessing(true); startProcTimer();
+      $('#proc-status').innerHTML='<span class="spinner"></span> מעבד…';
+      $('#processing-output').innerHTML=procCardHTML();
+      const res=await window.pywebview.api.process_file();
+      showProcessed(res); afterProcessing(res);
+    } else { nav('summaries'); }
+  }
+  // ---- Web mode: מחליף pywebview.api בקריאות fetch ל-FastAPI ----
+  window.pywebview = {
+    api: new Proxy({}, {
+      get(_, name) {
+        return (...args) =>
+          fetch('/api/' + name, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(args),
+          }).then(r => r.json());
+      }
+    })
+  };
+  // SSE — מאזין לעדכוני עיבוד מהשרת (progress, segments וכו')
+  (function startSSE() {
+    const es = new EventSource('/api/events');
+    es.onmessage = e => {
+      try {
+        const { fn, data } = JSON.parse(e.data);
+        if (fn && fn !== 'ping' && typeof window[fn] === 'function') window[fn](data);
+      } catch(_) {}
+    };
+    es.onerror = () => { es.close(); setTimeout(startSSE, 3000); };
+  })();
+
+  window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
