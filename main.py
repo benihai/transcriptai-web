@@ -463,4 +463,6 @@ async def upload_logo(file: UploadFile = File(...), project: str = Form(default=
 @app.get("/")
 async def root():
     html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
-    return HTMLResponse(html)
+    # Always serve fresh HTML so UI updates show immediately (esp. on mobile,
+    # where the browser would otherwise hold a stale cached copy of the page).
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
