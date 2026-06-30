@@ -1053,7 +1053,8 @@ async function saveProfile(){
   $('#profileModal').style.display='none'; toast('הפרופיל נשמר','check');
 }
 async function uploadProfileLogo(){
-  const r=await window.pywebview.api.upload_client_logo(_profileProject);
+  const r = window.IS_WEB ? await webUpload('/api/upload_logo', _profileProject, 'image/*')
+                          : await window.pywebview.api.upload_client_logo(_profileProject);
   if(r.ok){ toast('הלוגו הועלה','check'); profLogoStatus(true); } else if(!r.canceled) toast(r.error||'נכשל','alert');
 }
 async function removeProfileLogo(){
@@ -1730,8 +1731,30 @@ async function deleteMeeting(id, project){
 }
 
 /* ---------- upload media ---------- */
+// Web mode: browser file picker + multipart POST (desktop uses native dialog API).
+// window.IS_WEB is set by the web shim (build_web.py); undefined on desktop.
+function webUpload(endpoint, project, accept){
+  return new Promise(resolve=>{
+    const inp=document.createElement('input'); inp.type='file'; if(accept) inp.accept=accept;
+    inp.style.display='none'; document.body.appendChild(inp);
+    inp.onchange=async()=>{
+      const f=inp.files&&inp.files[0]; inp.remove();
+      if(!f){ resolve({ok:false,canceled:true}); return; }
+      toast('מעלה קובץ…','upload');
+      const fd=new FormData(); fd.append('file', f, f.name); fd.append('project', project||'כללי');
+      try{ const resp=await fetch(endpoint,{method:'POST',body:fd}); resolve(await resp.json()); }
+      catch(e){ resolve({ok:false,error:String(e)}); }
+    };
+    inp.click();
+  });
+}
 async function uploadMedia(){
   const proj=($('#projSelect') && $('#projSelect').value) || 'כללי';
+  if(window.IS_WEB){
+    const r=await webUpload('/api/upload_file', proj, 'audio/*,video/*,.webm,.m4a,.mp4,.wav,.mp3');
+    if(!r.ok){ if(!r.canceled) toast(r.error||'ההעלאה נכשלה','alert'); return; }
+    showNameModal({path:r.path, project:r.project}); return;
+  }
   toast('בחר קובץ להעלאה…','upload');
   const r=await window.pywebview.api.upload_media(proj);
   if(!r.ok){ if(!r.canceled) toast(r.error||'ההעלאה נכשלה','alert'); return; }
@@ -1952,7 +1975,8 @@ async function refreshLogoStatus(){
 }
 async function uploadClientLogo(){
   const proj=$('#fLogoProject').value||'כללי';
-  const r=await window.pywebview.api.upload_client_logo(proj);
+  const r = window.IS_WEB ? await webUpload('/api/upload_logo', proj, 'image/*')
+                          : await window.pywebview.api.upload_client_logo(proj);
   if(r.ok){ toast('הלוגו הועלה','check'); refreshLogoStatus(); } else if(!r.canceled) toast(r.error||'נכשל','alert');
 }
 async function removeClientLogo(){
@@ -2142,6 +2166,7 @@ document.addEventListener('DOMContentLoaded', ()=>{ try{ hydrateIcons(document);
 </script>
 <script>
   /* ===== Web mode shim: pywebview.api -> fetch('/api/{method}') ===== */
+  window.IS_WEB = true;   /* tells app.js to use browser file pickers / multipart uploads */
   window.pywebview = {
     api: new Proxy({}, {
       get(_, name) {
