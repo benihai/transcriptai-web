@@ -120,6 +120,7 @@ class ServerApi:
     # פרויקטים
     def list_projects(self):     return storage.list_projects()
     def create_project(self, name): return storage.create_project(name)
+    def delete_project(self, name): return storage.delete_project(name)
     def project_stats(self):     return storage.project_stats()
     def move_meeting(self, meeting_id, from_project, to_project):
         return storage.move_meeting(meeting_id, from_project, to_project)
