@@ -1,0 +1,71 @@
+# docker-compose לשרת Linux (VPS)
+# הבדל מהגרסה המקומית: נתיב volume הוא Linux ולא Windows
+#
+# הרצה מתיקיית external/meeting-bot/:
+#   docker compose -f ../../server/docker-compose.server.yml up -d
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT_HOST:-6379}:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - cache:/data
+    restart: unless-stopped
+
+  meeting-bot:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.development
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - GOOGLE_CHROME_CDP_URL=${GOOGLE_CHROME_CDP_URL-http://chrome-cdp:9223}
+      - STORAGE_PROVIDER=local
+      - UPLOADER_TYPE=s3
+      - LOCAL_OUTPUT_DIR=/output
+      - PULSE_SERVER=unix:/run/user/0/pulse/native
+      - XDG_RUNTIME_DIR=/run/user/0
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - ./.chrome:/usr/src/app/.chrome
+      - ./assets/screenshots:/usr/src/app/assets/screenshots
+      - ./debug-videos:/usr/src/app/debug-videos
+      - /usr/src/app/node_modules
+      - /home/ubuntu/meetingbot-output:/output   # Linux path (not Windows C:\)
+    command: ["/bin/bash", "./start.sh"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      chrome-cdp:
+        condition: service_healthy
+    restart: unless-stopped
+
+  chrome-cdp:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.chrome-cdp
+    shm_size: "1gb"
+    expose:
+      - "9223"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9223/json/version"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  cache:

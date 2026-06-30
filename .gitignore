@@ -1,0 +1,54 @@
+# ===== Python / env =====
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+!server/.env.server.example
+
+# ===== Secrets / config with credentials =====
+# calendar_config.json contains the Gmail App Password — never commit
+calendar_config.json
+*.secret
+*credentials*.json
+client_secret*.json
+token*.json
+
+# ===== User data / PII (recordings, transcripts, summaries) =====
+data/
+recordings/
+projects/
+my_tasks.json
+models/
+
+# ===== Media =====
+*.wav
+*.mp3
+*.m4a
+*.mp4
+*.webm
+*.mkv
+
+# ===== Third-party clone (has its own git, 200MB+) =====
+external/
+
+# ===== Backups / scratch =====
+*.bak
+*.bak-*
+src/web/*.bak-*
+
+# ===== Bot runtime =====
+.botprofile/
+.botprofile_diag/
+*botprofile*/
+*_diag/
+meetingbot-output/
+data/bot_*.json
+data/calendar*.log
+
+# ===== OS =====
+Thumbs.db
+.DS_Store
+desktop.ini

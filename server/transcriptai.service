@@ -1,0 +1,17 @@
+[Unit]
+Description=TranscriptAI Server Watcher
+Documentation=https://github.com/your-repo
+After=network.target docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/transcriptai
+ExecStart=/opt/transcriptai/.venv/bin/python -m server.watcher_server
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+# משתני סביבה נטענים מ-.env דרך python-dotenv (לא צריך EnvironmentFile כאן)
+
+[Install]
+WantedBy=multi-user.target
